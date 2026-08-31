@@ -185,3 +185,7 @@ pretrained fallback checkpoints provided.
   required); complementary α=0.98 stands blind w/ noise+bias and survives 1 N (accel-only
   falls at 0.8 N — dynamic acceleration corrupts it; shown cleanly via 4 N sinusoidal
   shake: 0.005→0.086 rad err with CLEAN sensors). Next: M3 (Lab 5, the ONNX linchpin).
+- **2026-09-01** — Concept review session (what is MuJoCo / what is ONNX) while browsing
+  Lab 1 solution + robot_walk.xml; no code changes. Standing next steps unchanged:
+  dry-run Lab 1 on the user's machine (viewer + notebooks), verify stage2 GPU sections
+  on RTX 4060/Colab, decide solution-distribution policy.
