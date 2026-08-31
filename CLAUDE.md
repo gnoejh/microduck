@@ -111,6 +111,9 @@ pretrained fallback checkpoints provided.
   0.093 m vs manifest's 0.09, known-limits verified → manifest = Lab 8 grading rubric;
   SB3→ONNX export matches predict to 1e-5 and replays in PolicyRunner. Windows gotcha:
   write_text needs encoding="utf-8" (cp949 locale). Course ready for dry-run teaching.
+- **2026-08-31 (publish)** — Pushed to https://github.com/gnoejh/microduck (M0–M5, all
+  8 labs). Next session candidates: dry-run Lab 1 on the user's machine (viewer +
+  notebooks), verify stage2 GPU sections on RTX 4060/Colab, solution-distribution policy.
 ### M4 — Labs 6–7 (in progress 2026-08-31)
 - [x] `envs/`: MicroduckStand-v0 + MicroduckWalk-v0, SAME contract as shipped policies
   (61 obs incl. commands, 14 actions = ctrl offsets ±0.6, 50 Hz, dt 0.005×4); named

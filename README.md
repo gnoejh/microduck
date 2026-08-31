@@ -16,7 +16,7 @@ Requirements: Python ≥ 3.12 and [uv](https://docs.astral.sh/uv/). Windows,
 macOS and Linux all work.
 
 ```bash
-git clone <this repo>
+git clone https://github.com/gnoejh/microduck.git
 cd microduck
 uv sync                      # creates .venv with everything pinned
 uv run pytest -q             # ~50 green tests = your machine is ready
