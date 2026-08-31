@@ -10,7 +10,9 @@ dependencies = [
     "matplotlib>=3.11.1",
     "mujoco>=3.12.0",
     "numpy>=2.5.2",
+    "onnx>=1.22.0",
     "onnxruntime>=1.29.0",
+    "pandas>=3.0.5",
     "stable-baselines3>=2.9.0",
 ]
 
@@ -26,3 +28,7 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/microduck_sim"]
+
+[tool.pytest.ini_options]
+markers = ["notebooks: executes all lecture/solution notebooks headless (slow, opt-in)"]
+addopts = "-m 'not notebooks'"

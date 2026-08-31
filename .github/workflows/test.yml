@@ -1,0 +1,39 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  pytest:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+      - run: uv sync
+      # default suite: fast, no rendering, no notebook execution
+      - run: uv run pytest -q
+
+  # The full course dry-run (executes every lecture/solution notebook,
+  # including real PPO training) — manual trigger only, ~30 min.
+  notebooks:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+      - run: uv sync
+      - run: sudo apt-get update && sudo apt-get install -y libegl1 libosmesa6
+      - run: uv run pytest -m notebooks -q
+        env:
+          MUJOCO_GL: osmesa

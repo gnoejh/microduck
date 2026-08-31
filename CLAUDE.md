@@ -99,8 +99,53 @@ pretrained fallback checkpoints provided.
 - Gotcha for later labs: left/right joints have MIRRORED sign conventions — raw L/R
   hip actions correlate +0.65 while being physically antiphase; also pitch ≡ asin(gx)
   exactly (gx = 2(wy−zx))
-### M4 — Labs 6–7 (Gym envs, CPU-tuned SB3 PPO, `stage2/colab_train.ipynb`, fallback checkpoints)
-### M5 — Lab 8 + polish (`evaluate.py`, HF publish walkthrough, setup guide, CI, notebook-execution tests)
+- **2026-08-31 (M4+M5)** — Course complete: all 8 labs written, all 16 lecture/solution
+  notebooks execute headless, 49 fast tests + 16 opt-in notebook tests, CI, README.
+  Verified highlights: CPU PPO **solves standing in ~7 min** (1M steps, 2500 fps, 8 envs;
+  log_std_init=-1 essential); 2M-step walk run **learned to stand instead of walk**
+  (0.015 m/s, 100% survival) — predicted by the reward audit (non-walker earns 90%),
+  now Lab 7's core lesson; reward-fix ladder verified (weights 1.11→1.30 < eval dist
+  1.49 < progress term 3.15); **shipped-walker deadband** (walks only at vx=0.25; backlash
+  chatter dithers it away); push tournament: our stand 0.6 N < Lab 3 PD 1.1 N < shipped
+  ≥5.8 N; **community repro**: flamingo-cycle checkpoint runs in our sim, lifted-foot
+  0.093 m vs manifest's 0.09, known-limits verified → manifest = Lab 8 grading rubric;
+  SB3→ONNX export matches predict to 1e-5 and replays in PolicyRunner. Windows gotcha:
+  write_text needs encoding="utf-8" (cp949 locale). Course ready for dry-run teaching.
+### M4 — Labs 6–7 (in progress 2026-08-31)
+- [x] `envs/`: MicroduckStand-v0 + MicroduckWalk-v0, SAME contract as shipped policies
+  (61 obs incl. commands, 14 actions = ctrl offsets ±0.6, 50 Hz, dt 0.005×4); named
+  reward terms in info; `reward_weights` kwarg for ablations (+ `--rw` in train script)
+- [x] `scripts/train_sb3.py` (CPU-tuned PPO; **log_std_init=-1 critical** — SB3's σ=1.0
+  saturates the ±0.6 action box and cripples learning), `export.py` (SB3→contract-ONNX,
+  verified vs predict), `evaluate.py` (scorecard/max_push/variant_sweep)
+- [x] **Stand solved on CPU**: 1M steps ≈ 7 min laptop (2500 fps, 8 envs), 10/10 full
+  episodes; ONNX export replays in PolicyRunner; committed to assets/checkpoints/
+- [x] Lab 6 notebooks (lecture executes; solution has 2×300k self-training cells)
+- [x] Lab 7 notebooks: reward-audit ladder ALL VERIFIED: default reward pays a
+  non-walker 90% of a walker (ratio 1.11) → weights ceiling 1.30 → fixed-cmd eval
+  1.49 → +progress term 3.15. **Shipped walker has a command deadband**: stands still
+  at vx≤0.2, walks only at 0.25 (the gamepad's exact value) — and the backlash
+  variant's chatter DITHERS it out of the deadband (walks at 0.2 there!)
+- [x] walk_v1 2M-step run done (~13 min CPU) → assets/checkpoints/. **The agent took
+  the loophole**: 100% survival, 0.015 m/s — it learned to STAND, exactly as the T1
+  audit predicted. Adopted as Lab 7's centerpiece ("audit first; the reward is a
+  contract"). All lecture/solution notebooks for Labs 6–7 executed headless ✅
+- [x] stage2/: colab_train.ipynb (SB3 track + official microduck_rl on T4; upstream
+  section marked not-yet-GPU-verified), rtx4060.md (instructor notes + TODO verify)
+
+### M5 — Lab 8 + polish (in progress 2026-08-31)
+- [x] `evaluate.py`; Lab 8 notebooks written (execution pending walk artifacts)
+- [x] **Push tournament measured**: our CPU stand_ppo 0.6 N < Lab 3 hand-PD 1.1 N <
+  shipped stand ≥5.8 N — "robustness you didn't train for doesn't exist"
+- [x] **Community repro verified**: RemiFabre/microduck-flamingo-cycle (policy.onnx +
+  manifest.json schema v2) runs in our sim; one-foot stand lifted-foot height 0.093 m
+  vs manifest's 0.09; backward-push known_limits verified. Manifest = Lab 8's grading rubric.
+- [x] lab08 notebooks executed (found+fixed a real cp949 Windows-locale bug in
+  write_text — kept as a teaching note); root README/setup guide; GitHub Actions CI
+  (fast suite on push; full notebook dry-run on manual dispatch, MUJOCO_GL=osmesa);
+  opt-in `pytest -m notebooks` runs all 16 lecture/solution notebooks (~25 min)
+- Remaining course TODOs (not blocking): verify stage2 GPU sections on RTX 4060/Colab;
+  instructor decides solution-distribution policy; mini-project grading rubric detail
 
 ## Risks
 - Lab 5 fidelity gap (BAM actuators vs our position actuators) — mitigate via the Space's

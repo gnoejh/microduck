@@ -216,3 +216,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# RL training runs (large, regenerable)
+runs/
+labs/**/runs/
+labs/**/downloads/
+labs/**/my_release/
