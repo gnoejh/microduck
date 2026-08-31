@@ -82,8 +82,23 @@ pretrained fallback checkpoints provided.
 - [x] Lab 3 "Feedback control": gravity droop vs servo kp, quaternion→pitch, ankle-strategy PD (0.82 s → indefinite), sign sabotage, push limits + hip-strategy challenge
 - [x] Lab 4 "Sensors & estimation": specific force (free-fall zero!), noise/bias modeling, estimator ladder (accel / gyro / complementary), the atan2(0,0)=π init faceplant, balance-blind finale
 - [x] 32 tests green; all 4 new lecture/solution notebooks validated by headless execution
-### M3 — Lab 5 ⚠ linchpin (`obs.py` 61-dim, `policy.py` ONNX runner, `scripts/play_policy.py`;
-  port obs/action wiring from the HF Space's JS glue — it already replays these policies in plain MuJoCo)
+### M3 — Lab 5 ✅ LINCHPIN CLEARED (2026-08-31)
+- [x] Decoded the contract from the Space's game.js + constants.js: obs = [gyro(3),
+  projected_gravity(3), qpos−DEFAULT_POSE(14), qvel(14), last_action(14), cmd(13)];
+  ctrl = DEFAULT_POSE + action·1.0; **timestep 0.005, decimation 4** (Space injects
+  `<option timestep>` into robot_allcollisions.xml); DEFAULT_POSE ≡ our STAND ctrl;
+  cmd: [vx,vy,wz, 4 head slots, zero-pad]; sitstand: cmd[0]=1 sits; one-shots use
+  [cosφ,sinφ]; fall: gz>−0.5, upright: gz<−0.85; VEL limits 0.25/−0.2/1.0
+- [x] obs.py (`ObsBuilder`), policy.py (`OnnxPolicy`, `PolicyRunner`), viz `record_policy`
+- [x] **Verified: shipped policies WORK in our CPU sim** — walk 1.06 m/10 s + steers,
+  stand balances, sitstand does the Lab-2-impossible transition both ways, get-up
+  recovers from prone in 1.1 s after an 8 N knockdown; **78× realtime** single env
+- [x] `scripts/play_policy.py` (arrow-key driving); Lab 5 lecture/worksheet/solution
+  (contract tour, square drive, gait FFT ≈ 2.5 Hz, overdrive extrapolation, full
+  fall→get-up→walk pipeline); 40 tests green
+- Gotcha for later labs: left/right joints have MIRRORED sign conventions — raw L/R
+  hip actions correlate +0.65 while being physically antiphase; also pitch ≡ asin(gx)
+  exactly (gx = 2(wy−zx))
 ### M4 — Labs 6–7 (Gym envs, CPU-tuned SB3 PPO, `stage2/colab_train.ipynb`, fallback checkpoints)
 ### M5 — Lab 8 + polish (`evaluate.py`, HF publish walkthrough, setup guide, CI, notebook-execution tests)
 

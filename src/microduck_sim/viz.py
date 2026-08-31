@@ -66,6 +66,31 @@ def record(
     return frames, log
 
 
+def record_policy(
+    runner,
+    duration: float,
+    fps: int = 25,
+    camera: str | int = -1,
+    size: tuple[int, int] = DEFAULT_SIZE,
+) -> tuple[list[np.ndarray], dict[str, np.ndarray]]:
+    """Run a `PolicyRunner` (Lab 5) while capturing video. Returns (frames, log)."""
+    every = max(1, round(50 / fps))
+    width, height = size
+    renderer = mujoco.Renderer(runner.model, height=height, width=width)
+    frames: list[np.ndarray] = []
+    rows = []
+    try:
+        for tick in range(int(round(duration * 50))):
+            rows.append(runner.step())
+            if tick % every == 0:
+                renderer.update_scene(runner.data, camera=camera)
+                frames.append(renderer.render())
+    finally:
+        renderer.close()
+    log = {k: np.asarray([r[k] for r in rows]) for k in rows[0]}
+    return frames, log
+
+
 def show(image: np.ndarray, title: str | None = None):
     """Display one RGB frame in a notebook (matplotlib, axes hidden)."""
     import matplotlib.pyplot as plt
