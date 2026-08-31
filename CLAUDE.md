@@ -69,7 +69,12 @@ pretrained fallback checkpoints provided.
 - [x] M0.4 `tests/test_model.py`: 16 tests green (all 6 scene variants load, keyframes, walk structure, IMU sensors, short-term stand, policies not LFS pointers)
 - [x] M0.5 First real commit
 
-### M1 — Labs 1–2 (`model.py`, trajectory helpers, notebooks)
+### M1 — Labs 1–2 ✅ (2026-08-31)
+- [x] `control.py` (50 Hz loop contract: constant/goto min-jerk/sine/chain/run_control_loop + logging) and `viz.py` (offscreen render/record/show/show_grid/show_video — all headless-safe)
+- [x] Lab 1 "Meet the duck": lecture + worksheet + solution (MJCF anatomy, keyframes, head-camera view, the open-loop fall, first ctrl command, fall-time experiment)
+- [x] Lab 2 "Kinematics & joint control": lecture + worksheet + solution (walk-vs-full variants, pose vectors, teleport-vs-min-jerk quantified, FK beak-path, seated dance, longest-stand challenge)
+- [x] jupytext workflow: `.py` percent files = source of truth → `.ipynb` committed WITHOUT outputs; lecture+solution notebooks validated by headless execution (see `labs/README.md`)
+- [x] 23 tests green
 ### M2 — Labs 3–4 (PD control, sensors/estimation, push helper, notebooks)
 ### M3 — Lab 5 ⚠ linchpin (`obs.py` 61-dim, `policy.py` ONNX runner, `scripts/play_policy.py`;
   port obs/action wiring from the HF Space's JS glue — it already replays these policies in plain MuJoCo)
@@ -94,3 +99,11 @@ pretrained fallback checkpoints provided.
   **open-loop STAND tips over after ~0.9 s** (measured) → perfect motivation demo for
   Lab 3 feedback control. 16 tests green. Next: M1 (Labs 1–2 notebooks + model/control
   library polish).
+- **2026-08-31 (M1)** — Labs 1–2 built and validated. Empirical findings that reshaped
+  Lab 2 (rule: *demo it or don't claim it*): in the walk model a seated duck sinks through
+  the floor (feet-only collision) → Lab 2 uses the `full` variant and T1 teaches variants;
+  SIT is a stable base (motions demoed seated); **open-loop stand-up from SIT always
+  face-plants** (even min-jerk, even via crouch) → honest cliffhanger for Lab 3 + Lab 5's
+  `BEST_alpha_sitstand.onnx`; teleport vs min-jerk head turn: 5.4 vs 2.3 rad/s peak;
+  longest-open-loop-stand challenge is winnable (baseline 0.82 s → slight crouch 1.18 s);
+  sine chains need integer periods per segment or poses jump. Next: M2 (Labs 3–4).
