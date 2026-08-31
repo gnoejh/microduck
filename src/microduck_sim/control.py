@@ -91,6 +91,80 @@ def chain(*segments: tuple[float, CtrlFn]) -> CtrlFn:
     return fn
 
 
+def quat_to_pitch_roll(quat: np.ndarray) -> tuple[float, float]:
+    """Trunk pitch and roll [rad] from a wxyz quaternion (e.g. ``data.qpos[3:7]``)."""
+    w, x, y, z = quat
+    pitch = float(np.arcsin(np.clip(2 * (w * y - z * x), -1.0, 1.0)))
+    roll = float(np.arctan2(2 * (w * x + y * z), 1 - 2 * (x * x + y * y)))
+    return pitch, roll
+
+
+def make_balance_controller(
+    model: mujoco.MjModel,
+    data: mujoco.MjData,
+    base_ctrl: np.ndarray,
+    kp_pitch: float = 1.0,
+    kd_pitch: float = 0.1,
+    pitch_fn: Callable[[], float] | None = None,
+    rate_fn: Callable[[], float] | None = None,
+) -> CtrlFn:
+    """Ankle-strategy standing balance (built by students in Lab 3).
+
+    Reads trunk pitch + pitch rate each tick and offsets the ankle targets:
+    ``left_ankle += kp*pitch + kd*rate``, ``right_ankle -=`` the same (the
+    ankles mirror). Defaults read ground truth from `data`; pass `pitch_fn` /
+    `rate_fn` to use estimated state instead (Lab 4).
+
+    Verified gains: kp=1.0, kd=0.1 stands indefinitely (baseline falls at
+    ~0.8 s); flipped signs make it fall FASTER than no feedback.
+    """
+    from microduck_sim.model import actuator_names
+
+    acts = actuator_names(model)
+    left, right = acts.index("left_ankle"), acts.index("right_ankle")
+    base_ctrl = np.asarray(base_ctrl, dtype=float).copy()
+
+    def fn(t: float) -> np.ndarray:
+        pitch = pitch_fn() if pitch_fn else quat_to_pitch_roll(data.qpos[3:7])[0]
+        rate = rate_fn() if rate_fn else float(data.qvel[4])
+        correction = kp_pitch * pitch + kd_pitch * rate
+        ctrl = base_ctrl.copy()
+        ctrl[left] += correction
+        ctrl[right] -= correction
+        return ctrl
+
+    return fn
+
+
+def make_push(
+    model: mujoco.MjModel,
+    data: mujoco.MjData,
+    force: float,
+    axis: int = 0,
+    t_start: float = 2.0,
+    duration: float = 0.1,
+    body: str = "trunk_base",
+) -> Callable[[mujoco.MjModel, mujoco.MjData], None]:
+    """An ``on_tick`` callback applying a horizontal push to a body.
+
+    axis 0 = forward (+x), 1 = sideways (+y). Times are relative to the tick
+    when the returned callback first fires. Remember to zero
+    ``data.xfrc_applied`` after the run if you reuse `data`.
+    """
+    body_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, body)
+    if body_id < 0:
+        raise ValueError(f"body {body!r} not found")
+    start = {"t0": None}  # latched on the first tick, so resets in between are safe
+
+    def on_tick(m: mujoco.MjModel, d: mujoco.MjData) -> None:
+        if start["t0"] is None:
+            start["t0"] = d.time
+        active = t_start <= (d.time - start["t0"]) < t_start + duration
+        d.xfrc_applied[body_id, axis] = force if active else 0.0
+
+    return on_tick
+
+
 def run_control_loop(
     model: mujoco.MjModel,
     data: mujoco.MjData,

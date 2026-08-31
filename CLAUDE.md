@@ -75,7 +75,13 @@ pretrained fallback checkpoints provided.
 - [x] Lab 2 "Kinematics & joint control": lecture + worksheet + solution (walk-vs-full variants, pose vectors, teleport-vs-min-jerk quantified, FK beak-path, seated dance, longest-stand challenge)
 - [x] jupytext workflow: `.py` percent files = source of truth → `.ipynb` committed WITHOUT outputs; lecture+solution notebooks validated by headless execution (see `labs/README.md`)
 - [x] 23 tests green
-### M2 — Labs 3–4 (PD control, sensors/estimation, push helper, notebooks)
+### M2 — Labs 3–4 ✅ (2026-08-31)
+- [x] control.py: `quat_to_pitch_roll`, `make_balance_controller` (ankle strategy, injectable pitch/rate for Lab 4), `make_push` (t0 latched on first tick — creating before reset was a silent no-op bug, fixed)
+- [x] sensors.py: `read_sensor`, `NoisyIMU` (Gaussian noise + gyro bias, seeded; `valid` flag when |accel| ≤ 1)
+- [x] estimation.py: `accel_pitch`, `ComplementaryFilter` (invalid-sample guard)
+- [x] Lab 3 "Feedback control": gravity droop vs servo kp, quaternion→pitch, ankle-strategy PD (0.82 s → indefinite), sign sabotage, push limits + hip-strategy challenge
+- [x] Lab 4 "Sensors & estimation": specific force (free-fall zero!), noise/bias modeling, estimator ladder (accel / gyro / complementary), the atan2(0,0)=π init faceplant, balance-blind finale
+- [x] 32 tests green; all 4 new lecture/solution notebooks validated by headless execution
 ### M3 — Lab 5 ⚠ linchpin (`obs.py` 61-dim, `policy.py` ONNX runner, `scripts/play_policy.py`;
   port obs/action wiring from the HF Space's JS glue — it already replays these policies in plain MuJoCo)
 ### M4 — Labs 6–7 (Gym envs, CPU-tuned SB3 PPO, `stage2/colab_train.ipynb`, fallback checkpoints)
@@ -107,3 +113,12 @@ pretrained fallback checkpoints provided.
   `BEST_alpha_sitstand.onnx`; teleport vs min-jerk head turn: 5.4 vs 2.3 rad/s peak;
   longest-open-loop-stand challenge is winnable (baseline 0.82 s → slight crouch 1.18 s);
   sine chains need integer periods per segment or poses jump. Next: M2 (Labs 3–4).
+- **2026-08-31 (M2)** — Labs 3–4 built, all claims sim-verified. Key numbers (full model):
+  ankle-strategy PD kp=1.0/kd=0.1 stands indefinitely; wrong sign falls at 0.4 s (faster
+  than no feedback); max push ankle-only **1.1 N forward / 4.1 N lateral** (support-polygon
+  asymmetry), hip strategy (+0.4·corr mirrored like ankles) → 1.4 N; servo droop:
+  |err| 0.47→0.009 rad for kp 0.2→8. IMU: duck spawns airborne → first ~30 ms are free
+  fall → accel ≈ 0 → naive filter init atan2(0,0)=π = instant faceplant (validity guard
+  required); complementary α=0.98 stands blind w/ noise+bias and survives 1 N (accel-only
+  falls at 0.8 N — dynamic acceleration corrupts it; shown cleanly via 4 N sinusoidal
+  shake: 0.005→0.086 rad err with CLEAN sensors). Next: M3 (Lab 5, the ONNX linchpin).
