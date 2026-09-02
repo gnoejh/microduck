@@ -189,3 +189,7 @@ pretrained fallback checkpoints provided.
   Lab 1 solution + robot_walk.xml; no code changes. Standing next steps unchanged:
   dry-run Lab 1 on the user's machine (viewer + notebooks), verify stage2 GPU sections
   on RTX 4060/Colab, decide solution-distribution policy.
+- **2026-09-03** — Housekeeping session: browsed Lab 1 solution notebook in the IDE; no
+  code changes, working tree was clean. Standing next steps unchanged: dry-run Lab 1 on
+  the user's machine (viewer + notebooks), verify stage2 GPU sections on RTX 4060/Colab,
+  decide solution-distribution policy.
