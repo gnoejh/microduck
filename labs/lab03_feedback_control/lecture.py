@@ -20,6 +20,22 @@
 # 4. When feedback goes wrong
 # 5. Getting pushed around (and surviving)
 
+# %% [markdown]
+# [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gnoejh/microduck/blob/main/labs/lab03_feedback_control/lecture.ipynb)
+# *Colab-first:* run the setup cell below once per runtime (it installs the course
+# package and picks the headless renderer). On a laptop checkout it is a no-op.
+
+# %%
+# --- setup (Colab or laptop; safe to re-run) -----------------------------------
+import os, subprocess, sys
+if "google.colab" in sys.modules and not os.path.exists("/content/microduck/pyproject.toml"):
+    subprocess.run(["git", "clone", "-q", "--depth", "1",
+                    "https://github.com/gnoejh/microduck.git", "/content/microduck"], check=True)
+    subprocess.run([sys.executable, "-m", "pip", "install", "-q", "-e", "/content/microduck"], check=True)
+if sys.platform.startswith("linux") and not os.environ.get("DISPLAY"):
+    os.environ.setdefault("MUJOCO_GL", "egl")  # headless Linux (Colab, CI); Win/mac keep their default
+from microduck_sim import colab; colab.setup("labs/lab03_feedback_control")
+
 # %%
 import matplotlib.pyplot as plt
 import mujoco
@@ -169,6 +185,18 @@ for force in [0.5, 1.0, 1.5]:
 # sideways (`axis=1`) in the worksheet: the duck survives *more* laterally,
 # with no roll feedback at all. Look at its feet and figure out why.
 #
+# ## Where this is heading
+#
+# Shove the robot's *shipped* balance policy with your mouse (drag the duck).
+# It survives pushes ten times what your ankle strategy takes — robustness it
+# was *trained* for, which is Labs 5–8:
+
+# %%
+from microduck_sim.web import show_playground
+
+show_playground("walk", policy="stand", height=480)
+
+# %% [markdown]
 # ## Recap
 #
 # - servos are P controllers; P alone leaves gravity droop, stiffness has costs

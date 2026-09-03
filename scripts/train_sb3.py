@@ -2,7 +2,7 @@
 
 Usage:
     uv run scripts/train_sb3.py [--env MicroduckStand-v0] [--steps 300000]
-                                [--out runs/stand] [--n-envs 8]
+                                [--out runs/stand] [--n-envs 8] [--vec subproc|dummy]
 
 Produces:
     <out>/model.zip        SB3 checkpoint (resume / evaluate)
@@ -23,7 +23,14 @@ def main() -> None:
     parser.add_argument("--env", default="MicroduckStand-v0")
     parser.add_argument("--steps", type=int, default=300_000)
     parser.add_argument("--out", default="runs/stand")
-    parser.add_argument("--n-envs", type=int, default=8)
+    parser.add_argument(
+        "--n-envs", type=int, default=None,
+        help="parallel envs (default: min(8, CPU count)); each is one process with --vec subproc",
+    )
+    parser.add_argument(
+        "--vec", choices=["subproc", "dummy"], default="subproc",
+        help="subproc = one process per env (real parallelism); dummy = serial in one process",
+    )
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument(
         "--log-std-init", type=float, default=-1.0,
@@ -43,6 +50,7 @@ def main() -> None:
     import gymnasium as gym
     from stable_baselines3 import PPO
     from stable_baselines3.common.env_util import make_vec_env
+    from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
     from stable_baselines3.common.logger import configure
 
     import microduck_sim.envs  # noqa: F401  (registers the envs)
@@ -50,10 +58,15 @@ def main() -> None:
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
 
+    import os
+
+    n_envs = args.n_envs or max(1, min(8, os.cpu_count() or 1))
     vec_env = make_vec_env(
-        args.env, n_envs=args.n_envs, seed=args.seed,
+        args.env, n_envs=n_envs, seed=args.seed,
         env_kwargs={"reward_weights": reward_weights} if reward_weights else None,
+        vec_env_cls=SubprocVecEnv if args.vec == "subproc" else DummyVecEnv,
     )
+    print(f"{args.env}: {n_envs} envs ({args.vec}), {args.steps} steps")
     model = PPO(
         "MlpPolicy",
         vec_env,

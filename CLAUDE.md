@@ -11,15 +11,18 @@ Isaac Sim** (planned separately later); Labs 7–8 seed the bridge concepts (par
 sims, domain randomization, GPU training).
 
 **Hard constraints:**
-- Students work on their own **laptops, CPU only** (Win/macOS/Linux). Everything
-  student-facing must run there. GPU work (instructor RTX 4060, free Colab T4) is an
-  optional advanced track.
+- **Colab-first, laptop optional** (decided 2026-09-04): every notebook opens in Google
+  Colab (badge + setup cell) and still runs on a laptop checkout (Win/macOS/Linux, CPU).
+  Interactive 3D = the browser **playground** (mjswan static site on GitHub Pages,
+  embedded as an iframe); the native viewer scripts are laptop extras. GPU work =
+  Lab 7's track on Colab T4 (upstream microduck_rl), instructor RTX 4060 / paid tier.
 - **Progressive derivation:** code, slides, and labs build up session by session; each
   lab graduates a module into the shared `microduck_sim` library that later labs import.
 - **Jupyter-based slides:** each lab's `lecture.ipynb` doubles as the presentation.
 - **Update this file** (checkboxes + dated progress log entry) after every work session.
 
 Approved full plan: `C:\Users\hjeong\.claude\plans\before-going-on-we-goofy-graham.md`
+M6 (Colab-native platform) plan: `C:\Users\hjeong\.claude\plans\i-must-think-carefully-zippy-clarke.md`
 
 ## Upstream references
 
@@ -47,14 +50,14 @@ Key technical facts (verified 2026-08-31):
 
 | # | Lab | Teaches | Graduates into library |
 |---|-----|---------|------------------------|
-| 1 | Meet the duck | Browser playground warm-up; uv install; MJCF anatomy; viewer; keyframes | `model.py` |
+| 1 | Meet the duck | Our browser playground warm-up (embedded); Colab setup; MJCF anatomy; keyframes | `model.py` |
 | 2 | Kinematics & joint control | Joint space, position targets, FK via sites, leg trajectories | `control.py` (trajectories) |
 | 3 | Feedback control | PD from scratch, gain tuning, standing balance, pushes | `control.py` (PD @ 50 Hz) |
 | 4 | Sensors & estimation | IMU, noise, complementary filter vs ground truth (Kalman = challenge) | `sensors.py`, `estimation.py` |
 | 5 | Running a trained policy | 61-dim contract, ONNX walk policy in our sim, obs/action inspection | `obs.py`, `policy.py` |
 | 6 | First RL training | Gymnasium anatomy, rewards, SB3 PPO standing task ≤30 min CPU | `envs/MicroduckStand-v0` |
 | 7 | Reward shaping & walking | Reward ablations, velocity task, DR; optional Colab GPU track (microduck_rl) | `envs/MicroduckWalk-v0`, `stage2/` |
-| 8 | Evaluation & mini-project | Push tests, DR sweeps, backlash = sim2sim robustness; compare vs official/community policies; publish to HF Hub; outlook → Isaac half | `evaluate.py` |
+| 8 | Evaluation & mini-project | Push tests, DR sweeps, backlash = sim2sim robustness; compare vs official/community policies; publish = PR into `assets/community/` → playground (HF Hub optional); outlook → Isaac half | `evaluate.py` (+ manifest/validation) |
 
 Principles: lab N imports the *library* version of earlier modules (falling behind never
 blocks); every notebook fits a 2–3 h session on laptop CPU; training cells ≤30 min with
@@ -150,12 +153,72 @@ pretrained fallback checkpoints provided.
 - Remaining course TODOs (not blocking): verify stage2 GPU sections on RTX 4060/Colab;
   instructor decides solution-distribution policy; mini-project grading rubric detail
 
+### M6 — Colab-native platform (in progress 2026-09-04)
+Decision: Colab-first; browser viewer = **mjswan** (MuJoCo-WASM + onnxruntime-web,
+Apache-2.0); GPU track = upstream microduck_rl on Colab T4. Plan file above.
+- [x] S0 isolated build env `playground/pyproject.toml` (mjswan 0.9.3 + mjlab 1.5.3 +
+  torch-cpu; uv `override-dependencies` mujoco==3.10.0, numpy<2.5 — mjlab needs both);
+  upstream `msp build microduck` builds all 9 scenes in **28 s** with the wheel's
+  prebuilt frontend (160 MB dist). Gotchas: the wheel ships `template/dist` WITHOUT the
+  cache marker → mjswan tries a Node rebuild; the Node build needs **PYTHONUTF8=1** on
+  Windows (cp949 again: generated stubs contain "§"); Git Bash mangles `--base-path
+  /microduck/` → use `MSYS_NO_PATHCONV=1`
+- [x] S1 our library + all 6 MJCF variants pass `test_model`/`test_policy` on mujoco 3.10
+- [x] S2 `web.py` port: our walk scene's fused obs graph + fell_over graph are
+  **byte-identical to upstream's**, and the browser obs graph equals `ObsBuilder` to
+  **2e-8** on a live state → the 61-dim contract holds in the browser. Visual drive
+  check in a real browser: PENDING (instructor: `playground/build.py --serve`)
+- [x] S2b `pose` scene (identity ONNX, 14 sliders, seated) builds; Lab 1/2 embed it
+- [x] S3 course checkpoints re-exported at **opset 18** with Pollen-style metadata_props
+  (`export.py`); match SB3 predict to 3e-7; replay upright; mjswan ignores metadata
+  and applies no normalizer (our raw-obs policies need nothing special)
+- [x] S4 (local half) `--base-path /microduck/` build emits `/microduck/assets/...`;
+  `.github/workflows/playground.yml` builds + deploys to GitHub Pages (needs the
+  one-time Pages=Actions setting). Colab-iframe check: PENDING first deploy
+- [ ] S5 microduck_rl on Colab T4 (num-envs sweep, minutes-to-upright, export →
+  PolicyRunner + playground) — needs a Colab session; recipe in `stage2/colab_gpu_track`
+- [ ] S6 all 16 notebooks on a Colab CPU runtime (setup cell, MUJOCO_GL=egl, budgets)
+- [ ] S7 in-Colab self-build of a student ONNX (`uv sync --project playground` cold time)
+- [x] Library: `web.py` (show_playground + build port), `colab.py` (setup/persist, SETUP_CELL),
+  `export.py` (opset 18 + metadata + read_onnx_metadata), `policy.py` (metadata,
+  `community/<handle>`), `evaluate.py` (`make_manifest`, `validate_submission`),
+  `train_sb3.py` (**SubprocVecEnv** default — it was DummyVecEnv while the text claimed
+  "8 processes"), deps ipython + huggingface_hub
+- [x] Playground: `playground/build.py` (11 scenes; walk scene hosts every walking-layout
+  policy incl. `assets/community/*`), `make_pose_policy.py`, example submission
+  `assets/community/course-walk-cpu`, `assets/community/README.md`
+- [x] Notebooks: Colab badge + shared setup cell in all 24 + stage2; playground embeds
+  in Labs 1, 2, 3 (closing), 5, 6, 8; Lab 7 GPU block = concrete T4 recipe +
+  three-way scorecard table; Lab 8 deployment = PR; `stage2/colab_gpu_track.ipynb`
+  (real clone URL, Drive via `colab.persist`), `stage2/gpu_notes.md` (measurement table)
+- [x] Tests: `test_web`, `test_export`, `test_community` (fast suite); CI `playground.yml`
+- Not ported to the browser on purpose: Lab 3/4 Python loops, pushes, eval protocols
+  (Python = measurement instrument, browser = experience instrument)
+
 ## Risks
 - Lab 5 fidelity gap (BAM actuators vs our position actuators) — mitigate via the Space's
   own MJCF+glue; tackle in M3, early enough to adjust Labs 5–7.
 - If full-duck CPU PPO exceeds the 30-min budget → reduced-obs / fixed-base balance variant.
+- Colab: free T4 not guaranteed at peak; 2 vCPU CPU runtime slower than a laptop; mjswan
+  moves fast (61 releases) → pins + `playground/tests`; CC BY-SA-NC meshes on a public
+  Pages site → ATTRIBUTION.md copied into the build, non-commercial teaching use.
 
 ## Progress log
+- **2026-09-04 (M6 kickoff)** — Platform decision with the instructor: **Colab-first,
+  laptop optional**; interactive 3D via **mjswan** (browser MuJoCo-WASM + ONNX; its
+  `mjswan_playground` already wired all 9 Microduck policies); GPU track = upstream
+  microduck_rl on Colab T4. Built the isolated `playground/` env (mujoco 3.10 + numpy<2.5
+  overrides), ported the scene/obs wiring into `web.py` and verified the browser's fused
+  obs graph is byte-identical to upstream's and equals `ObsBuilder` to 2e-8; re-exported
+  checkpoints at opset 18 with Pollen metadata; `colab.py` + setup cell + badge in all
+  25 notebooks; playground embeds in Labs 1/2/3/5/6/8; Lab 8 deployment = PR into
+  `assets/community/`; CI `playground.yml` for GitHub Pages; SubprocVecEnv fix. Windows
+  gotchas: PYTHONUTF8=1 for the Node build, MSYS_NO_PATHCONV=1 for `--base-path`.
+  Verified locally: 59 fast tests, playground build test, Labs 1/2/3/5/6/8 lectures
+  execute headless; full 11-scene build 134 MB. Committed + pushed to main (this
+  push triggers the first `playground.yml` run). **Next:** enable Pages (Settings →
+  Pages → Source: GitHub Actions) if the deploy job fails; visual drive check in a
+  browser; S5/S6/S7 in Colab; fill `stage2/gpu_notes.md` table.
 - **2026-08-31** — Kickoff. Researched robot + `microduck_rl` (GPU-only upstream ⇒ own CPU
   track). Surveyed HF: found official browser simulator Space with 6 ONNX policies (adopted
   as Lab 1 warm-up + policy source) and community checkpoints. Constraints finalized with

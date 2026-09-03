@@ -20,6 +20,22 @@
 # 4. The community ecosystem: manifests, reproduction, publishing
 # 5. Mini-projects & where this course goes next
 
+# %% [markdown]
+# [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gnoejh/microduck/blob/main/labs/lab08_evaluation/lecture.ipynb)
+# *Colab-first:* run the setup cell below once per runtime (it installs the course
+# package and picks the headless renderer). On a laptop checkout it is a no-op.
+
+# %%
+# --- setup (Colab or laptop; safe to re-run) -----------------------------------
+import os, subprocess, sys
+if "google.colab" in sys.modules and not os.path.exists("/content/microduck/pyproject.toml"):
+    subprocess.run(["git", "clone", "-q", "--depth", "1",
+                    "https://github.com/gnoejh/microduck.git", "/content/microduck"], check=True)
+    subprocess.run([sys.executable, "-m", "pip", "install", "-q", "-e", "/content/microduck"], check=True)
+if sys.platform.startswith("linux") and not os.environ.get("DISPLAY"):
+    os.environ.setdefault("MUJOCO_GL", "egl")  # headless Linux (Colab, CI); Win/mac keep their default
+from microduck_sim import colab; colab.setup("labs/lab08_evaluation")
+
 # %%
 import matplotlib.pyplot as plt
 import numpy as np
@@ -111,15 +127,28 @@ for variant, result in sweep.items():
 #
 # Your Lab 6/7 exports are already contract-compatible. Shipping one =
 # `policy.onnx` + your `manifest.json` (declare commands honestly, document
-# the eval battery you actually ran, list known limits) + a README, pushed
-# with `huggingface_hub`:
+# the eval battery you actually ran, list known limits) + a README —
+# `make_manifest` writes the schema, `validate_submission` checks it:
 #
 # ```python
-# from huggingface_hub import HfApi
-# api = HfApi()                       # needs: huggingface-cli login
-# api.create_repo("YOUR_NAME/microduck-my-behavior", repo_type="model")
-# api.upload_folder(folder_path="my_release", repo_id="YOUR_NAME/microduck-my-behavior")
+# from microduck_sim.evaluate import make_manifest, validate_submission
+# manifest = make_manifest("my-duck", eval=my_scorecard, known_limits="...")
+# validate_submission("my_release", quick=False)   # what CI will run on your PR
 # ```
+#
+# **Deployment = a pull request** adding `assets/community/<your-handle>/`.
+# CI validates it, the playground rebuilds, and your duck is in everyone's
+# browser: `show_playground("walk", policy="<your-handle>")`. The example
+# submission is the instructor's own (honest!) walk_ppo:
+
+# %%
+from microduck_sim.web import show_playground
+
+show_playground("walk", policy="course_walk_cpu", height=480)
+
+# %% [markdown]
+# Optionally also push the folder to the Hugging Face Hub, where the community
+# checkpoints live (`huggingface-cli login`, then `HfApi().upload_folder(...)`).
 #
 # Known limits are not weakness — the flamingo manifest lists exactly when it
 # falls, and that's what makes it *usable* by strangers.

@@ -21,6 +21,22 @@
 # 5. Your first physics surprise
 
 # %% [markdown]
+# [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gnoejh/microduck/blob/main/labs/lab01_meet_the_duck/lecture.ipynb)
+# *Colab-first:* run the setup cell below once per runtime (it installs the course
+# package and picks the headless renderer). On a laptop checkout it is a no-op.
+
+# %%
+# --- setup (Colab or laptop; safe to re-run) -----------------------------------
+import os, subprocess, sys
+if "google.colab" in sys.modules and not os.path.exists("/content/microduck/pyproject.toml"):
+    subprocess.run(["git", "clone", "-q", "--depth", "1",
+                    "https://github.com/gnoejh/microduck.git", "/content/microduck"], check=True)
+    subprocess.run([sys.executable, "-m", "pip", "install", "-q", "-e", "/content/microduck"], check=True)
+if sys.platform.startswith("linux") and not os.environ.get("DISPLAY"):
+    os.environ.setdefault("MUJOCO_GL", "egl")  # headless Linux (Colab, CI); Win/mac keep their default
+from microduck_sim import colab; colab.setup("labs/lab01_meet_the_duck")
+
+# %% [markdown]
 # ## The course at a glance
 #
 # | # | Lab | You will |
@@ -34,7 +50,8 @@
 # | 7 | Reward shaping & walking | make it walk better |
 # | 8 | Evaluation & mini-project | stress-test and compare policies |
 #
-# Everything runs on **your laptop, CPU only**. The second half of the semester
+# Everything runs **in your browser via Google Colab** (a laptop checkout works
+# too, CPU only — no GPU needed). The second half of the semester
 # moves to NVIDIA Isaac Sim on lab machines — the concepts you learn here carry over.
 
 # %% [markdown]
@@ -52,9 +69,17 @@
 # (MuJoCo) and then copies the learned network onto the robot. We use their actual
 # robot model files and their actual trained policies.
 #
-# **Warm-up (2 min):** open the official browser playground and drive the duck with
-# WASD/arrow keys: <https://huggingface.co/spaces/pollen-robotics/microduck-simulator>
-# — everything you see there, you will build up yourself in Python over these labs.
+# **Warm-up (2 min):** drive the duck. The cell below embeds the *course
+# playground* — the same MuJoCo physics and the same trained network, compiled to
+# run inside your browser tab. Sliders = the command the network reads; drag the
+# duck to shove it. Everything you see there, you will build up yourself in
+# Python over these labs. (Pollen's original is at
+# <https://huggingface.co/spaces/pollen-robotics/microduck-simulator>.)
+
+# %%
+from microduck_sim.web import show_playground
+
+show_playground("walk", policy="walk", height=520)
 
 # %% [markdown]
 # ## The robot
@@ -169,14 +194,18 @@ show(render_frame(model, data), title="after 2 seconds...")
 # %% [markdown]
 # ## The interactive viewer
 #
-# On your own machine (not on the projector 😉) run, from the repo root:
-#
-# ```
-# uv run scripts/view.py
-# ```
-#
-# - drag = orbit, scroll = zoom, **SPACE** = cycle poses, **R** = reset
-# - double-click a body, then **Ctrl + right-drag** applies a force — push the duck!
+# The playground again, this time with **no controller at all** — the 14 sliders
+# are the motor targets (`ctrl`) you just wrote by hand, and the duck starts
+# seated because that pose is stable. Drag to orbit, scroll to zoom, drag the
+# duck to push it:
+
+# %%
+show_playground("pose", height=520)
+
+# %% [markdown]
+# *Laptop extra:* `uv run scripts/view.py` opens the native MuJoCo viewer
+# (SPACE cycles poses, R resets, Ctrl + right-drag pushes) — same model, no
+# browser. Not needed for the course.
 #
 # ## Recap
 #

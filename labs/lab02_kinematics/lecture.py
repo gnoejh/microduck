@@ -22,6 +22,22 @@
 # 6. Rhythm and routines — and one honest failure
 
 # %% [markdown]
+# [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gnoejh/microduck/blob/main/labs/lab02_kinematics/lecture.ipynb)
+# *Colab-first:* run the setup cell below once per runtime (it installs the course
+# package and picks the headless renderer). On a laptop checkout it is a no-op.
+
+# %%
+# --- setup (Colab or laptop; safe to re-run) -----------------------------------
+import os, subprocess, sys
+if "google.colab" in sys.modules and not os.path.exists("/content/microduck/pyproject.toml"):
+    subprocess.run(["git", "clone", "-q", "--depth", "1",
+                    "https://github.com/gnoejh/microduck.git", "/content/microduck"], check=True)
+    subprocess.run([sys.executable, "-m", "pip", "install", "-q", "-e", "/content/microduck"], check=True)
+if sys.platform.startswith("linux") and not os.environ.get("DISPLAY"):
+    os.environ.setdefault("MUJOCO_GL", "egl")  # headless Linux (Colab, CI); Win/mac keep their default
+from microduck_sim import colab; colab.setup("labs/lab02_kinematics")
+
+# %% [markdown]
 # ## Model variants
 #
 # Lab 1 used the `"walk"` variant, where **only the feet have collision shapes**
@@ -65,6 +81,14 @@ for name, s, q in zip(actuator_names(model), stand, sit):
 # %% [markdown]
 # Notice left/right mirror each other with flipped signs — remember that
 # whenever you design symmetric motions.
+#
+# The playground's `pose` scene *is* this vector with a slider per entry. The
+# simplest possible controller is the identity: slider in, target out.
+
+# %%
+from microduck_sim.web import show_playground
+
+show_playground("pose", height=480)
 #
 # ## The 50 Hz control loop
 #

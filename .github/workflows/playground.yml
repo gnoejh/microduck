@@ -1,0 +1,73 @@
+name: playground
+
+# Builds the browser playground (static mjswan site) and deploys it to GitHub
+# Pages. Runs in the isolated playground/ uv project (mujoco 3.10 override,
+# mjswan + mjlab + torch-cpu) - never in the student environment.
+#
+# One-time setup: repo Settings -> Pages -> Source = "GitHub Actions".
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "assets/**"
+      - "playground/**"
+      - "src/microduck_sim/web.py"
+      - "src/microduck_sim/obs.py"
+      - ".github/workflows/playground.yml"
+  pull_request:
+    paths:
+      - "assets/community/**"
+      - "playground/**"
+      - "src/microduck_sim/web.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+          enable-cache: true
+          cache-dependency-glob: "playground/uv.lock"
+      - name: Validate community submissions (fast suite env)
+        run: |
+          uv sync
+          uv run pytest -q tests/test_community.py tests/test_web.py
+      - name: Install the build environment
+        run: uv sync --project playground
+      - name: Build the playground
+        env:
+          PYTHONUTF8: "1"
+        run: uv run --project playground python playground/build.py --out playground/dist --base-path /microduck/
+      - name: Smoke-check the build
+        run: |
+          test -f playground/dist/index.html
+          test -f playground/dist/assets/config.json
+          python3 -c "import json; c=json.load(open('playground/dist/assets/config.json')); print([s['name'] for s in c['projects'][0]['scenes']])"
+          du -sh playground/dist
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: playground/dist
+
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

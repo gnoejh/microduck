@@ -1,0 +1,45 @@
+{
+  "schema_version": 2,
+  "model_api": 1,
+  "name": "course-walk-cpu",
+  "kind": "perpetual",
+  "obs_len": 61,
+  "action_len": 14,
+  "action_scale": 1.0,
+  "clip_actions": 0.6,
+  "entry_pose": "standing",
+  "scene": "walk",
+  "twist": "velocity",
+  "command": {
+    "twist": [
+      "vx m/s in [0, 0.25]",
+      "unused (0)",
+      "unused (0)"
+    ],
+    "head": "unused (zeros)",
+    "idle": [
+      0,
+      0,
+      0
+    ]
+  },
+  "robot": {
+    "model": "microduck",
+    "servos": "xl330",
+    "control_hz": 50
+  },
+  "training": {
+    "task_id": "MicroduckWalk-v0 (course SB3 track)",
+    "steps": 2000000,
+    "hardware": "laptop CPU, ~13 min",
+    "repo": "https://github.com/gnoejh/microduck"
+  },
+  "eval": {
+    "sim_proxy": "CPU MuJoCo, walk model",
+    "survival_rate": 1.0,
+    "mean_speed_at_cmd_0.25": 0.015,
+    "tracking_error": 0.235,
+    "max_push_N": 0.6,
+    "known_limits": "took the reward loophole: stands still instead of walking (Lab 7 lesson); trained without pushes; clean-model physics only"
+  }
+}

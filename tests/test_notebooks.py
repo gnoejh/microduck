@@ -24,6 +24,7 @@ def test_notebook_executes(notebook):
     result = subprocess.run(
         [sys.executable, "-m", "jupyter", "nbconvert", "--to", "notebook",
          "--execute", "--stdout", str(notebook)],
-        capture_output=True, text=True, cwd=notebook.parent, timeout=1800,
+        capture_output=True, text=True, encoding="utf-8", errors="replace",
+        cwd=notebook.parent, timeout=1800,  # utf-8: notebooks print '—' (cp949 locale bug)
     )
     assert result.returncode == 0, result.stderr[-3000:]

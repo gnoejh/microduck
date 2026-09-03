@@ -11,6 +11,22 @@
 # %% [markdown]
 # # Lab 2 — Kinematics & Joint Control · SOLUTION
 
+# %% [markdown]
+# [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gnoejh/microduck/blob/main/labs/lab02_kinematics/solution.ipynb)
+# *Colab-first:* run the setup cell below once per runtime (it installs the course
+# package and picks the headless renderer). On a laptop checkout it is a no-op.
+
+# %%
+# --- setup (Colab or laptop; safe to re-run) -----------------------------------
+import os, subprocess, sys
+if "google.colab" in sys.modules and not os.path.exists("/content/microduck/pyproject.toml"):
+    subprocess.run(["git", "clone", "-q", "--depth", "1",
+                    "https://github.com/gnoejh/microduck.git", "/content/microduck"], check=True)
+    subprocess.run([sys.executable, "-m", "pip", "install", "-q", "-e", "/content/microduck"], check=True)
+if sys.platform.startswith("linux") and not os.environ.get("DISPLAY"):
+    os.environ.setdefault("MUJOCO_GL", "egl")  # headless Linux (Colab, CI); Win/mac keep their default
+from microduck_sim import colab; colab.setup("labs/lab02_kinematics")
+
 # %%
 import matplotlib.pyplot as plt
 import mujoco

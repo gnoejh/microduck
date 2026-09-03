@@ -20,6 +20,22 @@
 # 4. PPO, and one exploration knob that makes-or-breaks it
 # 5. Train, evaluate, export — your policy in the Lab 5 machinery
 
+# %% [markdown]
+# [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gnoejh/microduck/blob/main/labs/lab06_first_rl/lecture.ipynb)
+# *Colab-first:* run the setup cell below once per runtime (it installs the course
+# package and picks the headless renderer). On a laptop checkout it is a no-op.
+
+# %%
+# --- setup (Colab or laptop; safe to re-run) -----------------------------------
+import os, subprocess, sys
+if "google.colab" in sys.modules and not os.path.exists("/content/microduck/pyproject.toml"):
+    subprocess.run(["git", "clone", "-q", "--depth", "1",
+                    "https://github.com/gnoejh/microduck.git", "/content/microduck"], check=True)
+    subprocess.run([sys.executable, "-m", "pip", "install", "-q", "-e", "/content/microduck"], check=True)
+if sys.platform.startswith("linux") and not os.environ.get("DISPLAY"):
+    os.environ.setdefault("MUJOCO_GL", "egl")  # headless Linux (Colab, CI); Win/mac keep their default
+from microduck_sim import colab; colab.setup("labs/lab06_first_rl")
+
 # %%
 import gymnasium as gym
 import matplotlib.pyplot as plt
@@ -102,7 +118,8 @@ for name, fn in [("zero-action (hold STAND)", zero), ("random", rand)]:
 # (stochastic) policy → estimate which actions did better than expected →
 # nudge the network toward those, *clipping* the change so one bad batch
 # can't wreck it → repeat. The same algorithm Pollen used — theirs just ran
-# 4096 ducks in parallel; we run 8 processes.
+# 4096 ducks in parallel; we run 8 (one process per env, `SubprocVecEnv` —
+# on Colab's 2 vCPUs use `--n-envs 2`, the default adapts).
 #
 # **The knob that bit us:** SB3 starts with exploration noise σ = 1.0 rad.
 # Our actions cap at ±0.6 rad — pure noise saturation, and the poor duck gets
@@ -162,6 +179,18 @@ path = export_sb3_to_onnx("../../assets/checkpoints/stand_ppo.zip",
 runner = PolicyRunner(OnnxPolicy(path))
 runner.run(5.0)
 print(f"ONNX replay in the Lab 5 runner: upright after 5 s = {runner.upright}")
+print("contract metadata:", OnnxPolicy(path).metadata["observation_names"])
+
+# %% [markdown]
+# The exported file is the same format the browser runs. The instructor's copy of
+# this exact checkpoint is already in the playground — drag the duck and feel how
+# little push it tolerates (Lab 8 measures it: 0.6 N). Yours gets there through a
+# pull request in Lab 8.
+
+# %%
+from microduck_sim.web import show_playground
+
+show_playground("walk", policy="stand_ppo_course_cpu", height=480)
 
 # %% [markdown]
 # ## Recap

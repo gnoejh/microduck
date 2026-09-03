@@ -1,0 +1,36 @@
+[project]
+name = "microduck-playground"
+version = "0.1.0"
+description = "Builds the course's browser playground (mjswan static site) — instructor/CI only"
+requires-python = ">=3.12, <3.13"
+dependencies = [
+    "mjswan==0.9.3",
+    "mjlab==1.5.3",
+    "torch>=2.9.1",
+    "onnx>=1.20.0",
+    "onnxruntime>=1.21.0",
+    "numpy",
+    "mjswan-playground",
+    "microduck",
+]
+
+[tool.uv.sources]
+mjswan-playground = { git = "https://github.com/ttktjmt/mjswan_playground.git", rev = "4883f70e622b67a79810676ce6eb76031ecdd2c4" }
+microduck = { path = "..", editable = true }
+torch = [{ index = "pytorch-cpu" }]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+# Same overrides mjswan_playground carries: mjlab 1.5.3 pulls a mujoco older than the
+# one mujoco-warp needs; our course package pins mujoco>=3.12 for the student env.
+[tool.uv]
+override-dependencies = [
+    "mujoco==3.10.0",
+    "mujoco-mjx==3.10.0",
+    "mujoco-warp>=3.10.0.3,<3.11",
+    "h5py>=3.8.0",
+    "numpy>=2.0,<2.5",
+]

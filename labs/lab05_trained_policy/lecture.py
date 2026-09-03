@@ -22,6 +22,22 @@
 # 4. What open-loop couldn't do: standing up
 # 5. Reading a network's mind (obs/action traces)
 
+# %% [markdown]
+# [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gnoejh/microduck/blob/main/labs/lab05_trained_policy/lecture.ipynb)
+# *Colab-first:* run the setup cell below once per runtime (it installs the course
+# package and picks the headless renderer). On a laptop checkout it is a no-op.
+
+# %%
+# --- setup (Colab or laptop; safe to re-run) -----------------------------------
+import os, subprocess, sys
+if "google.colab" in sys.modules and not os.path.exists("/content/microduck/pyproject.toml"):
+    subprocess.run(["git", "clone", "-q", "--depth", "1",
+                    "https://github.com/gnoejh/microduck.git", "/content/microduck"], check=True)
+    subprocess.run([sys.executable, "-m", "pip", "install", "-q", "-e", "/content/microduck"], check=True)
+if sys.platform.startswith("linux") and not os.environ.get("DISPLAY"):
+    os.environ.setdefault("MUJOCO_GL", "egl")  # headless Linux (Colab, CI); Win/mac keep their default
+from microduck_sim import colab; colab.setup("labs/lab05_trained_policy")
+
 # %%
 import matplotlib.pyplot as plt
 import mujoco
@@ -96,8 +112,18 @@ show_video(frames)
 print(f"displacement: {runner.data.qpos[0]:+.2f} m forward, upright: {runner.upright}")
 
 # %% [markdown]
-# Seven weeks ago that was 800 g of falling plastic; now it *walks*. And it
-# steers — change the command mid-run, like a gamepad stick would:
+# Seven weeks ago that was 800 g of falling plastic; now it *walks*. The same
+# ONNX file runs in your browser — the playground's sliders are literally
+# `command[0:3]` (twist) and `command[3:7]` (head). Note the deadband: below
+# ~0.25 m/s forward the shipped walker just stands.
+
+# %%
+from microduck_sim.web import show_playground
+
+show_playground("walk", policy="walk", height=520)
+
+# %% [markdown]
+# And it steers — change the command mid-run, like a gamepad stick would:
 
 # %%
 runner = PolicyRunner("walk")
@@ -187,7 +213,8 @@ plt.legend(); plt.title("the learned gait, visible in the actions"); plt.show()
 # - the 61-dim obs is made of things you built by hand in Labs 1–4
 # - shipped policies walk, steer, sit, stand up, and get up off the floor
 # - actions show a rhythmic, *learned* gait
-# - library: `ObsBuilder`, `OnnxPolicy`, `PolicyRunner`; try
-#   `uv run scripts/play_policy.py` at home — arrow keys drive the duck
+# - library: `ObsBuilder`, `OnnxPolicy`, `PolicyRunner`, `web.show_playground`
+#   (same ONNX in the browser and in Python — `OnnxPolicy(...).metadata` tells
+#   you the contract it was built for; laptop extra: `scripts/play_policy.py`)
 #
 # **Worksheet: T1–T5.** Next week you *train* one of these yourself.

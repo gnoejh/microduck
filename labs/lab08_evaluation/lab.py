@@ -13,6 +13,22 @@
 #
 # Final lab: prove how good a policy is, then ship it. T1–T5.
 
+# %% [markdown]
+# [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gnoejh/microduck/blob/main/labs/lab08_evaluation/lab.ipynb)
+# *Colab-first:* run the setup cell below once per runtime (it installs the course
+# package and picks the headless renderer). On a laptop checkout it is a no-op.
+
+# %%
+# --- setup (Colab or laptop; safe to re-run) -----------------------------------
+import os, subprocess, sys
+if "google.colab" in sys.modules and not os.path.exists("/content/microduck/pyproject.toml"):
+    subprocess.run(["git", "clone", "-q", "--depth", "1",
+                    "https://github.com/gnoejh/microduck.git", "/content/microduck"], check=True)
+    subprocess.run([sys.executable, "-m", "pip", "install", "-q", "-e", "/content/microduck"], check=True)
+if sys.platform.startswith("linux") and not os.environ.get("DISPLAY"):
+    os.environ.setdefault("MUJOCO_GL", "egl")  # headless Linux (Colab, CI); Win/mac keep their default
+from microduck_sim import colab; colab.setup("labs/lab08_evaluation")
+
 # %%
 import json
 import urllib.request
@@ -103,9 +119,13 @@ print(f"T4 ok — reproduced a stranger's eval to the cm: {measured_height:.3f} 
 #   real `known_limits`
 # - `README.md` (3 sentences minimum)
 #
-# Then publish to the Hugging Face Hub (`huggingface-cli login`, then
-# `HfApi().create_repo(...)` + `upload_folder(...)`) — or hand in the folder
-# if you'd rather not create an account.
+# Use `make_manifest(...)` for the schema and run `validate_submission("my_release",
+# quick=False)` — that is exactly what CI runs on your pull request.
+#
+# Then **deploy it**: open a pull request that adds your folder as
+# `assets/community/<your-github-handle>/`. When it merges, the playground rebuilds
+# and your duck is in everyone's browser (`show_playground("walk", policy=...)`).
+# Publishing to the Hugging Face Hub as well is optional.
 #
 # **Manifest honesty is the grade**: we will run your eval battery.
 

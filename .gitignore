@@ -222,3 +222,7 @@ runs/
 labs/**/runs/
 labs/**/downloads/
 labs/**/my_release/
+
+# Playground build scratch
+playground/.tmp/
+playground/dist/

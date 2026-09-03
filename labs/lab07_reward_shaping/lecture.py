@@ -21,6 +21,22 @@
 # 4. Domain randomization: why Lab 5's policies transfer
 # 5. The GPU track: same recipe, three orders of magnitude more ducks
 
+# %% [markdown]
+# [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gnoejh/microduck/blob/main/labs/lab07_reward_shaping/lecture.ipynb)
+# *Colab-first:* run the setup cell below once per runtime (it installs the course
+# package and picks the headless renderer). On a laptop checkout it is a no-op.
+
+# %%
+# --- setup (Colab or laptop; safe to re-run) -----------------------------------
+import os, subprocess, sys
+if "google.colab" in sys.modules and not os.path.exists("/content/microduck/pyproject.toml"):
+    subprocess.run(["git", "clone", "-q", "--depth", "1",
+                    "https://github.com/gnoejh/microduck.git", "/content/microduck"], check=True)
+    subprocess.run([sys.executable, "-m", "pip", "install", "-q", "-e", "/content/microduck"], check=True)
+if sys.platform.startswith("linux") and not os.environ.get("DISPLAY"):
+    os.environ.setdefault("MUJOCO_GL", "egl")  # headless Linux (Colab, CI); Win/mac keep their default
+from microduck_sim import colab; colab.setup("labs/lab07_reward_shaping")
+
 # %%
 import gymnasium as gym
 import matplotlib.pyplot as plt
@@ -160,16 +176,27 @@ print(f"commanded 0.2 m/s, achieved {(xs[-1] - xs[0]) / (len(xs) / 50):.3f} m/s 
 # That's why their ONNX survived our plain MuJoCo unchanged (Lab 5), and it's
 # the exact idea you'll stress-test in Lab 8 with the backlash model variants.
 #
-# ## The GPU track (optional, `stage2/`)
+# ## The GPU track (`stage2/colab_gpu_track.ipynb`)
 #
-# Same PPO, same contract — but mjlab/MuJoCo Warp steps **4096 ducks in
-# lockstep on the GPU**. Google Colab's free T4 runs it at ~1024 envs
-# (`stage2/colab_train.ipynb`); the official checkpoints came from this
-# pipeline. One command:
+# Same PPO, same contract — but mjlab/MuJoCo Warp steps **thousands of ducks
+# in lockstep on the GPU**. Switch the Colab runtime to a T4 and run Pollen's
+# own pipeline; a 20-minute run is enough to *see* the difference:
 #
 # ```
-# uv run train Mjlab-Velocity-Flat-MicroDuck --env.scene.num-envs 1024
+# git clone https://github.com/pollen-robotics/microduck_rl && cd microduck_rl && uv sync
+# uv run train Mjlab-Velocity-Flat-MicroDuck --env.scene.num-envs 1024 --agent.max-iterations 300
+# uv run scripts/export.py Mjlab-Velocity-Flat-MicroDuck --wandb-run-path <entity/project/run>
 # ```
+#
+# The export is a contract ONNX (normalizer baked in), so it drops straight into
+# `PolicyRunner` and the playground. Compare three walkers on one scorecard —
+# our 2M-step CPU run, a 20-minute T4 run, Pollen's shipped policy:
+#
+# | policy | steps/hour | survival | speed at 0.25 |
+# |---|---|---|---|
+# | course walk_ppo (CPU, 8 envs) | ~10 M | 1.0 | 0.015 (stands!) |
+# | microduck_rl on T4 (1024 envs) | *measure it* | | |
+# | shipped `walk` | (4096 envs, hours) | 1.0 | ≈0.11 |
 #
 # Next semester's Isaac Sim half is this idea, industrialized: parallel
 # physics as the substrate of modern robot learning. You already speak it.

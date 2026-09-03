@@ -12,7 +12,7 @@ from pathlib import Path
 import mujoco
 import numpy as np
 
-from microduck_sim.model import POLICIES_DIR, load_model, reset_to_keyframe
+from microduck_sim.model import ASSETS_DIR, POLICIES_DIR, load_model, reset_to_keyframe
 from microduck_sim.obs import (
     ACTION_SCALE,
     CMD_SIZE,
@@ -38,14 +38,24 @@ BEHAVIORS = {
 }
 
 
+#: Lab 8 submissions: assets/community/<handle>/policy.onnx (+ manifest.json)
+COMMUNITY_DIR = ASSETS_DIR / "community"
+
+
 class OnnxPolicy:
-    """One pretrained behavior: obs (61) in → action (14) out."""
+    """One pretrained behavior: obs (61) in → action (14) out.
+
+    Accepts a behavior name (`BEHAVIORS`), ``"community/<handle>"`` (a Lab 8
+    submission) or any path to a contract-compatible ONNX file.
+    """
 
     def __init__(self, name_or_path: str | Path):
         import onnxruntime as ort
 
         path = Path(name_or_path)
-        if not path.suffix:  # behavior name
+        if str(name_or_path).startswith("community/"):
+            path = COMMUNITY_DIR / str(name_or_path).split("/", 1)[1] / "policy.onnx"
+        elif not path.suffix:  # behavior name
             path = POLICIES_DIR / BEHAVIORS[str(name_or_path)]
         self.path = path
         self.session = ort.InferenceSession(
@@ -53,6 +63,11 @@ class OnnxPolicy:
         )
         self.input_name = self.session.get_inputs()[0].name
         self.output_name = self.session.get_outputs()[0].name
+
+    @property
+    def metadata(self) -> dict[str, str]:
+        """The file's ``metadata_props`` (Pollen-style keys; see export.py)."""
+        return {k: v for k, v in self.session.get_modelmeta().custom_metadata_map.items()}
 
     def act(self, obs: np.ndarray) -> np.ndarray:
         out = self.session.run(

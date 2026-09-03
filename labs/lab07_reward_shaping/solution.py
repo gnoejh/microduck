@@ -13,6 +13,22 @@
 #
 # (T5's training cell costs ~4 minutes of CPU by design.)
 
+# %% [markdown]
+# [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/gnoejh/microduck/blob/main/labs/lab07_reward_shaping/solution.ipynb)
+# *Colab-first:* run the setup cell below once per runtime (it installs the course
+# package and picks the headless renderer). On a laptop checkout it is a no-op.
+
+# %%
+# --- setup (Colab or laptop; safe to re-run) -----------------------------------
+import os, subprocess, sys
+if "google.colab" in sys.modules and not os.path.exists("/content/microduck/pyproject.toml"):
+    subprocess.run(["git", "clone", "-q", "--depth", "1",
+                    "https://github.com/gnoejh/microduck.git", "/content/microduck"], check=True)
+    subprocess.run([sys.executable, "-m", "pip", "install", "-q", "-e", "/content/microduck"], check=True)
+if sys.platform.startswith("linux") and not os.environ.get("DISPLAY"):
+    os.environ.setdefault("MUJOCO_GL", "egl")  # headless Linux (Colab, CI); Win/mac keep their default
+from microduck_sim import colab; colab.setup("labs/lab07_reward_shaping")
+
 # %%
 import gymnasium as gym
 import matplotlib.pyplot as plt
@@ -141,7 +157,7 @@ print(f"vx=0.20 on backlash variant: achieved {bl['mean_speed']:.3f} m/s")
 #
 # Train 500k steps on the default walk reward and once with your structural
 # fix, then compare achieved speed at cmd = 0.25. Leaderboard: lowest
-# tracking error at 500k steps. (GPU track: `stage2/colab_train.ipynb` runs
+# tracking error at 500k steps. (GPU track: `stage2/colab_gpu_track.ipynb` runs
 # the official pipeline that made the policies you just audited.)
 
 # %%
