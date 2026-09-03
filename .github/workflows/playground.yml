@@ -12,14 +12,13 @@ on:
     paths:
       - "assets/**"
       - "playground/**"
-      - "src/microduck_sim/web.py"
-      - "src/microduck_sim/obs.py"
+      - "src/microduck_sim/**"
       - ".github/workflows/playground.yml"
   pull_request:
     paths:
       - "assets/community/**"
       - "playground/**"
-      - "src/microduck_sim/web.py"
+      - "src/microduck_sim/**"
   workflow_dispatch:
 
 permissions:
