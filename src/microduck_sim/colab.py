@@ -29,23 +29,23 @@ def in_colab() -> bool:
 
 def set_gl(backend: str = "egl") -> None:
     """Select MuJoCo's offscreen rendering backend (must run before importing mujoco)."""
-    if "mujoco" in sys.modules and os.environ.get("MUJOCO_GL") != backend:
-        raise RuntimeError(
-            "mujoco was imported before MUJOCO_GL was set; restart the runtime and run "
-            "the setup cell first."
+    if "mujoco" in sys.modules and os.environ.get("MUJOCO_GL", backend) != backend:
+        print(
+            "warning: mujoco was imported before MUJOCO_GL was set; if rendering fails, "
+            "restart the runtime and run the setup cell first."
         )
+        return
     os.environ.setdefault("MUJOCO_GL", backend)
 
 
 def setup(lab_dir: str | None = None, *, repo: str = REPO_URL, gl: str = "egl") -> Path:
     """Prepare a Colab runtime (clone + install) and `chdir` into `lab_dir`.
 
-    Returns the repo root. On a laptop it only sets MUJOCO_GL when the platform
-    is headless Linux and returns the checkout the package was installed from.
+    Returns the repo root. Outside Colab it is a no-op (the notebook setup cell
+    already chose MUJOCO_GL before mujoco was imported) and returns the checkout
+    the package was installed from.
     """
     if not IN_COLAB:
-        if sys.platform.startswith("linux") and not os.environ.get("DISPLAY"):
-            set_gl(gl)
         return Path(__file__).resolve().parents[2]
 
     set_gl(gl)
