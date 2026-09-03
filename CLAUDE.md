@@ -216,8 +216,11 @@ Apache-2.0); GPU track = upstream microduck_rl on Colab T4. Plan file above.
   gotchas: PYTHONUTF8=1 for the Node build, MSYS_NO_PATHCONV=1 for `--base-path`.
   Verified locally: 59 fast tests, playground build test, Labs 1/2/3/5/6/8 lectures
   execute headless; full 11-scene build 134 MB. Committed + pushed to main (this
-  push triggers the first `playground.yml` run). **Next:** enable Pages (Settings →
-  Pages → Source: GitHub Actions) if the deploy job fails; visual drive check in a
+  push triggers the first `playground.yml` run). CI after push: `tests` green on
+  ubuntu + windows (after making `colab.setup` a no-op outside Colab — it raised on
+  headless Linux); `playground` **build job green on Linux incl. the Node frontend
+  build**, deploy job failed because Pages is not enabled yet. **Next:** Settings →
+  Pages → Source: GitHub Actions, then re-run the workflow; visual drive check in a
   browser; S5/S6/S7 in Colab; fill `stage2/gpu_notes.md` table.
 - **2026-08-31** — Kickoff. Researched robot + `microduck_rl` (GPU-only upstream ⇒ own CPU
   track). Surveyed HF: found official browser simulator Space with 6 ONNX policies (adopted
