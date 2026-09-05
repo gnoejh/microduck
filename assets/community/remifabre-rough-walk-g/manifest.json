@@ -1,0 +1,47 @@
+{
+  "schema_version": 2,
+  "model_api": 1,
+  "name": "rough-walk-g",
+  "kind": "perpetual",
+  "obs_len": 61,
+  "action_len": 14,
+  "action_scale": 1.0,
+  "entry_pose": "standing",
+  "duration_s": null,
+  "description": "Velocity-commanded walking trained from scratch on a rough-terrain ladder (3300 iterations): the sturdiest of the family on small stairs and slopes, at +17% motor power over alpha_walking.",
+  "command": {
+    "twist": [
+      "vx: forward velocity command, m/s, trained range -0.4 .. 0.4",
+      "vy: lateral velocity command, m/s, trained range -0.3 .. 0.3",
+      "wz: yaw rate command, rad/s, trained range -1.0 .. 1.0 (achieved ~0.29 at 1.0 \u2014 weak turner)"
+    ],
+    "head": "4 head-joint deltas from HOME, rad \u2014 tracked",
+    "body": "unused (zeros)",
+    "idle": [
+      0,
+      0,
+      0
+    ]
+  },
+  "robot": {
+    "model": "microduck",
+    "hw_rev": 1,
+    "servos": "xl330",
+    "control_hz": 50
+  },
+  "training": {
+    "task_id": "Mjlab-Hostile-FinetuneFeetProgress-MicroDuck (continuation of Mjlab-Hostile-ScratchFeetProgress-MicroDuck)",
+    "repo": "pollen-robotics/microduck_rl",
+    "commit": "6cd45fc on branch hostile-terrain (https://github.com/pollen-robotics/microduck_rl/commit/6cd45fc)",
+    "run": "pollen-robotics/hostile-g-continue-c-20260830-0630 (from scratch: 2500 it as hostile-c-scratch-feet-progress-20260830-0209, +800 it continued; wandb lyr06dji -> 4x3786f3)"
+  },
+  "eval": {
+    "sim_proxy": "CPU MuJoCo with the BAM XL330 servo model; 10 s rollouts at 0.3 m/s, 5 random headings per terrain",
+    "battery_falls": "12/110 (alpha_walking: 32/110); the only policy of the family that survived both 2 cm stairs and the 9 deg slope in the synchronized comparison",
+    "corridor_tour_m": 5.1,
+    "flat_speed_m_s": 0.11,
+    "motor_power_flat_w": 1.21,
+    "turn_response": "0.29 rad/s achieved for 1.0 commanded - the weak point",
+    "known_limits": "+17% motor power vs alpha_walking (warmer servos under sustained use); weak turn response; stalls on rubble bumps >= ~1.5 cm; a completely new gait style, so hardware transfer is less certain than for the fine-tuned policies; never tested on hardware"
+  }
+}

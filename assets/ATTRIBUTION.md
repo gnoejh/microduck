@@ -35,3 +35,19 @@ used here for **non-commercial teaching purposes**.
 - Source: same HF Space (`app/public/robot/mjlab/`): the MJCF variants and
   `kinematics*.json` the browser playground uses to replay these policies in plain
   MuJoCo (WASM). Kept as the reference for our Python obs/action wiring (Lab 5).
+
+## `community/` — third-party policies vendored from the Hugging Face Hub
+
+Community Microduck checkpoints, added 2026-09-05 so Lab 8 has real strangers'
+policies to compare against and the playground has more than one walker. Each
+folder keeps the author's `policy.onnx` and `manifest.json` **unmodified**; the
+`README.md` in each folder is ours and records what we measured in our own sim.
+
+| Folder | Author | Source (Apache-2.0) |
+|--------|--------|---------------------|
+| `remifabre-rough-walk-e` | RemiFabre | https://huggingface.co/RemiFabre/microduck-rough-walk-e |
+| `remifabre-rough-walk-g` | RemiFabre | https://huggingface.co/RemiFabre/microduck-rough-walk-g |
+| `remifabre-flamingo-cycle` | RemiFabre | https://huggingface.co/RemiFabre/microduck-flamingo-cycle |
+| `joanfox-happy-hop` | joanfox | https://huggingface.co/joanfox/microduck-happy-hop |
+
+`course-walk-cpu` is ours (the Lab 7 run kept as the example submission).

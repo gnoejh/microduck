@@ -172,9 +172,11 @@ Apache-2.0); GPU track = upstream microduck_rl on Colab T4. Plan file above.
 - [x] S3 course checkpoints re-exported at **opset 18** with Pollen-style metadata_props
   (`export.py`); match SB3 predict to 3e-7; replay upright; mjswan ignores metadata
   and applies no normalizer (our raw-obs policies need nothing special)
-- [x] S4 (local half) `--base-path /microduck/` build emits `/microduck/assets/...`;
-  `.github/workflows/playground.yml` builds + deploys to GitHub Pages (needs the
-  one-time Pages=Actions setting). Colab-iframe check: PENDING first deploy
+- [x] S4 `--base-path /microduck/` build emits `/microduck/assets/...`;
+  `.github/workflows/playground.yml` builds + deploys to GitHub Pages.
+  **Pages is LIVE** (verified 2026-09-05: <https://gnoejh.github.io/microduck/>
+  serves the real mjswan build). Colab-iframe check: still PENDING (needs one
+  real Colab session)
 - [ ] S5 microduck_rl on Colab T4 (num-envs sweep, minutes-to-upright, export →
   PolicyRunner + playground) — needs a Colab session; recipe in `stage2/colab_gpu_track`
 - [ ] S6 all 16 notebooks on a Colab CPU runtime (setup cell, MUJOCO_GL=egl, budgets)
@@ -204,6 +206,29 @@ Apache-2.0); GPU track = upstream microduck_rl on Colab T4. Plan file above.
   Pages site → ATTRIBUTION.md copied into the build, non-commercial teaching use.
 
 ## Progress log
+- **2026-09-05 (community gallery)** — Walked the instructor through the whole
+  teach/learn flow (repo public + per-student Colab accounts; a shared Colab
+  account would hit per-account session caps and Docs-style co-editing collisions).
+  **Confirmed GitHub Pages is live** — the playground serves the real build, so the
+  last M6 S4 blocker is cleared. Then surveyed the Hub (27 `microduck` models,
+  **all Apache-2.0** — the CC BY-SA-NC concern applies to the *meshes*, not the
+  policy weights) and vendored 4 into `assets/community/`: `remifabre-rough-walk-e`,
+  `-rough-walk-g`, `-flamingo-cycle`, `joanfox-happy-hop` (author's policy.onnx +
+  manifest.json unmodified, our README records our own measurements). Walk-scene
+  dropdown is now 9 policies; `validate_submission(quick=False)` passes on all 5
+  folders; 63 fast tests.
+  **New measured finding — `eval.sim_proxy` predicts sim2sim transfer.** 7 Hub
+  checkpoints tested: the 4 whose manifests say "CPU MuJoCo with the BAM XL330
+  servo model" all kept their behavior; the 3 that say "mjlab / MuJoCo Warp" or
+  declare no sim_proxy (`HannesVonEssen/microduck-running`,
+  `Teethyfish/microduck-collision-flamingo-ii`, `Nupr-Haokun/microduck-step-up`)
+  **fell within 0.5–3 s at every command** despite identical 61/14/50 Hz contracts.
+  Also: the rough-walk siblings have **no command deadband** (0.071/0.073 m/s at
+  vx=0.2 where shipped `alpha_walking` gives 0.001) — a control group for Lab 7's
+  deadband lesson; flamingo lifted foot re-measured 0.093 m vs manifest 0.09;
+  happy-hop is the partial-transfer case (upright, but a 7 mm hop). Lab 8 now has
+  strangers' policies on disk. **Next:** fold the sim_proxy finding into Lab 8's
+  notebooks; Colab-iframe + notebook-budget check (S6); S5 GPU track.
 - **2026-09-04 (M6 kickoff)** — Platform decision with the instructor: **Colab-first,
   laptop optional**; interactive 3D via **mjswan** (browser MuJoCo-WASM + ONNX; its
   `mjswan_playground` already wired all 9 Microduck policies); GPU track = upstream
