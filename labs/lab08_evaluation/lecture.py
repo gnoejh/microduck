@@ -123,6 +123,33 @@ for variant, result in sweep.items():
 # returns to two feet on [0, 0]. Different simulator, same contract, same
 # behavior — that's what a good manifest buys.
 #
+# ### ...but the contract alone guarantees nothing
+#
+# We ran **seven** Hub checkpoints in our sim. All Apache-2.0, all declaring
+# 61 obs → 14 actions at 50 Hz. Four kept their behavior; three fell within
+# 0.5–3 s at *every* command we tried. The split follows one manifest field:
+#
+# | the author evaluated in (`eval.sim_proxy`) | transferred to our sim |
+# |---|---|
+# | "CPU MuJoCo with the BAM XL330 servo model" | **4 / 4** |
+# | "mjlab / MuJoCo Warp", or not declared at all | **0 / 3** |
+#
+# The contract is a *wire format*, not a promise about physics. A policy is also
+# a function of the actuator model it grew up with: Pollen's BAM model gives the
+# XL330s backlash, back-EMF, current saturation and delay, where we use plain
+# position actuators. A 2.2 m/s running gait leans hard on that force response,
+# and it does not survive the crossing. `happy-hop` shows the middle case —
+# upright and recognizable, but a 7 mm hop instead of a real one.
+#
+# That is the whole sim2sim lesson in one table, and it is why the manifest asks
+# what you evaluated on. A stranger cannot re-run your training; they *can* ask
+# whether your simulator resembles theirs. Worksheet T4 has you reproduce it.
+#
+# Bonus finding from the same seven: the `rough-walk` siblings have **no command
+# deadband** — 0.071 m/s at vx = 0.2, where the shipped walker gives 0.001 (Lab
+# 7's finding). Two policies, same contract, different command semantics in
+# practice. Mini-project 2 is exactly this problem.
+#
 # ## Publishing your own (the worksheet finale)
 #
 # Your Lab 6/7 exports are already contract-compatible. Shipping one =

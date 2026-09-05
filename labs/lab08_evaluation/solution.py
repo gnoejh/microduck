@@ -92,42 +92,54 @@ for name, pol in [("shipped", "walk"),
 # 'walk' model only, so gear chatter is out-of-distribution physics for it.
 
 # %% [markdown]
-# ## T4 — Reproduce a community eval
+# ## T4 — Does a stranger's policy survive OUR simulator?
 #
-# `RemiFabre/microduck-flamingo-cycle` publishes policy.onnx + manifest.json.
-# Download both, print the manifest's command spec, then reproduce TWO
-# documented eval facts in our sim:
-# (a) commanded [1, +1] → lifted-foot height ≈ 0.09 m;
-# (b) "falls on backward pushes ≥ 0.18 m/s" → verify it survives a gentle
-# backward shove but falls to a strong one.
+# Seven Hub checkpoints, all Apache-2.0, all declaring the same 61/14/50 Hz
+# contract. Four are vendored in `assets/community/`; three we download.
+# (a) reproduce one documented number, (b) run all seven, (c) find the manifest
+# field that predicts which ones transfer.
 
 # %%
-base = "https://huggingface.co/RemiFabre/microduck-flamingo-cycle/resolve/main"
+COMMUNITY = Path("../../assets/community")
+VENDORED = ["remifabre-rough-walk-e", "remifabre-rough-walk-g",
+            "remifabre-flamingo-cycle", "joanfox-happy-hop"]
+HUB = {
+    "running": "HannesVonEssen/microduck-running",
+    "collision-flamingo-ii": "Teethyfish/microduck-collision-flamingo-ii",
+    "step-up": "Nupr-Haokun/microduck-step-up",
+}
 dl = Path("downloads"); dl.mkdir(exist_ok=True)
-for f in ["policy.onnx", "manifest.json"]:
-    if not (dl / f).exists():
-        urllib.request.urlretrieve(f"{base}/{f}", dl / f)
+for slug, repo in HUB.items():
+    (dl / slug).mkdir(exist_ok=True)
+    for f in ["policy.onnx", "manifest.json"]:
+        if not (dl / slug / f).exists():
+            urllib.request.urlretrieve(
+                f"https://huggingface.co/{repo}/resolve/main/{f}", dl / slug / f)
 
-manifest = json.loads((dl / "manifest.json").read_text(encoding="utf-8"))
+flamingo = COMMUNITY / "remifabre-flamingo-cycle"
+manifest = json.loads((flamingo / "manifest.json").read_text(encoding="utf-8"))
 print("command spec:", json.dumps(manifest["command"]["twist"], indent=1))
 print("documented lifted foot height:", manifest["eval"]["lifted_foot_height_m"], "m")
 
-# (a) reproduce the one-foot stand
-runner = PolicyRunner(OnnxPolicy(dl / "policy.onnx"))
+# %%
+# (a) reproduce the one-foot stand. Note the commands mean something else here:
+# same 13 slots, same sliders, completely different semantics — which is exactly
+# why the manifest has to spell them out.
+runner = PolicyRunner(OnnxPolicy("community/remifabre-flamingo-cycle"))
 sites = [mujoco.mj_id2name(runner.model, mujoco.mjtObj.mjOBJ_SITE, i)
          for i in range(runner.model.nsite)]
 lf = sites.index("left_foot")
 runner.command[0], runner.command[1] = 1.0, 1.0  # one foot, right side down
 runner.run(3.0)
-height = float(runner.data.site_xpos[lf, 2])
-print(f"measured lifted foot height: {height:.3f} m")
-assert abs(height - manifest["eval"]["lifted_foot_height_m"]) < 0.03
-# Different simulator than the author used — same behavior, to the cm.
+measured_height = float(runner.data.site_xpos[lf, 2])
+print(f"measured lifted foot height: {measured_height:.3f} m")
+assert abs(measured_height - manifest["eval"]["lifted_foot_height_m"]) < 0.03
+# Different simulator than the author used — same behavior, to the centimetre.
 
 # %%
-# (b) the documented backward-push limit
+# (a, optional) the documented backward-push limit
 def backward_push_survives(force):
-    r = PolicyRunner(OnnxPolicy(dl / "policy.onnx"))
+    r = PolicyRunner(OnnxPolicy("community/remifabre-flamingo-cycle"))
     r.command[0], r.command[1] = 1.0, 1.0
     trunk = mujoco.mj_name2id(r.model, mujoco.mjtObj.mjOBJ_BODY, "trunk_base")
     for tick in range(400):
@@ -143,9 +155,62 @@ def backward_push_survives(force):
 
 for f in [0.3, 2.0]:
     print(f"backward push {f} N: {'survives' if backward_push_survives(f) else 'falls'}")
-# Gentle push held, strong push fell — consistent with the manifest's
-# "known_limits". Documented limits you can CHECK are what make a stranger's
-# policy usable.
+# Gentle push held, strong push fell — consistent with the manifest.
+
+# %%
+# (b) run all seven for 5 s at zero command, (c) next to their sim_proxy.
+# Survival = never fell, checked every tick. `upright` alone is instantaneous:
+# a duck that face-plants and tumbles can land upright-ish again by t = 5 s and
+# score a false pass. Measurement design is part of the protocol.
+def survives(onnx_path, duration=5.0):
+    r = PolicyRunner(OnnxPolicy(onnx_path))
+    for _ in range(int(duration * 50)):
+        r.step()
+        if not r.upright:
+            return False
+    return True
+
+
+folders = [COMMUNITY / v for v in VENDORED] + [dl / s for s in HUB]
+audit = []
+for folder in folders:
+    man = json.loads((folder / "manifest.json").read_text(encoding="utf-8"))
+    proxy = (man.get("eval") or {}).get("sim_proxy") or "(not declared)"
+    audit.append((man.get("name", folder.name), survives(folder / "policy.onnx"), proxy))
+
+print(f"{'policy':<22} {'5 s':<9} evaluated by its author in")
+for name, up, proxy in audit:
+    print(f"{name:<22} {'survived' if up else 'FELL':<9} {proxy[:58]}")
+
+survived = {name for name, up, _ in audit if up}
+
+# %%
+assert survived == {"rough-walk-e", "rough-walk-g", "flamingo-cycle", "happy-hop"}
+print(f"{len(survived)} of {len(audit)} transferred")
+
+# %% [markdown]
+# **The answer: `eval.sim_proxy`.** Every policy whose author evaluated it in
+# *CPU MuJoCo with the BAM XL330 servo model* kept its behaviour here (4/4).
+# Every policy evaluated only in *mjlab / MuJoCo Warp*, or with no `sim_proxy`
+# declared at all, fell within 0.5–3 s (0/3) — at every command we tried, not
+# just at zero.
+#
+# All seven speak an identical contract: 61 observations in, 14 actions out,
+# 50 Hz, same joint order, same `DEFAULT_POSE` offsets. **The contract is a
+# wire format, not a promise about physics.** A policy also depends on the
+# actuator model it was trained against — Pollen's BAM model gives XL330 servos
+# backlash, back-EMF, current saturation and delay; our position actuators are a
+# coarser approximation. Cross that gap and a fast running gait, which leans on
+# the actuator's precise force response, simply falls over.
+#
+# `joanfox-happy-hop` shows the middle case: upright, recognisably the same
+# behaviour, but the trunk rises 7 mm where the author's sim shows a real hop.
+# Partial transfer, not binary.
+#
+# This is why T5 asks you to write down what you evaluated on. A stranger
+# reading your manifest cannot re-run your training, but they *can* check
+# whether your simulator resembles theirs — and that one line tells them more
+# about whether your duck will work for them than any score in the file.
 
 # %% [markdown]
 # ## T5 — Ship your best policy 🏆

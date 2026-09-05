@@ -89,25 +89,63 @@ print("T2 ok — now write the explanation, it's the course's biggest lesson")
 # *Your answer:* ...
 
 # %% [markdown]
-# ## T4 — Reproduce a community eval
+# ## T4 — Does a stranger's policy survive OUR simulator?
 #
-# Download `policy.onnx` + `manifest.json` from
-# `https://huggingface.co/RemiFabre/microduck-flamingo-cycle/resolve/main/`.
-# Read the manifest: command semantics and `eval` section. Reproduce TWO
-# documented facts in our sim:
-# (a) command [flag=1, side=+1] for 3 s → measure the lifted foot height
-# via `data.site_xpos` (manifest says 0.09 m; ±0.03 tolerance),
-# (b) its `known_limits` say it falls to strong backward pushes — verify a
-# gentle backward shove (0.3 N × 0.1 s) is survived and a strong one (2 N)
-# is not.
+# Seven community checkpoints from the Hugging Face Hub. All Apache-2.0, all
+# claiming the contract you have used all course: **61 obs → 14 actions at
+# 50 Hz**. Four are vendored in `assets/community/` (load them with
+# `OnnxPolicy("community/<folder>")`); three you download in the cell below.
+#
+# **(a) Reproduce one documented number.** `remifabre-flamingo-cycle` stands on
+# one foot — and its commands do NOT mean what the walking sliders mean:
+# `twist[0]` = 1 (one foot), `twist[1]` = +1 (right foot down). Command it for
+# 3 s and measure the lifted foot with `data.site_xpos`; the manifest claims
+# 0.09 m. (Optional: its `known_limits` say it falls to strong backward pushes
+# — check that 0.3 N is survived and 2 N is not.)
+#
+# **(b) Run all seven for 5 s** at zero command and record which **never fall**.
+# Check `runner.upright` after *every* tick, not just at the end: a duck that
+# face-plants and tumbles can land upright-ish again by t = 5 s and score a
+# false pass. How you measure is part of the protocol.
+#
+# **(c) Put your survived/fell column next to each manifest's
+# `eval["sim_proxy"]`** — the simulator its author evaluated in. One field
+# predicts transfer almost perfectly. Which one, and why does an identical
+# contract not guarantee identical behaviour?
 
 # %%
-# TODO
+HUB = {  # the three that are NOT vendored — fetch them from the Hub
+    "running": "HannesVonEssen/microduck-running",
+    "collision-flamingo-ii": "Teethyfish/microduck-collision-flamingo-ii",
+    "step-up": "Nupr-Haokun/microduck-step-up",
+}
+dl = Path("downloads"); dl.mkdir(exist_ok=True)
+for slug, repo in HUB.items():
+    (dl / slug).mkdir(exist_ok=True)
+    for f in ["policy.onnx", "manifest.json"]:
+        if not (dl / slug / f).exists():
+            urllib.request.urlretrieve(
+                f"https://huggingface.co/{repo}/resolve/main/{f}", dl / slug / f)
+print("downloaded:", sorted(p.name for p in dl.iterdir()))
+
+# %%
+# TODO (a)
 measured_height = ...
 
 # %%
 assert abs(measured_height - 0.09) < 0.03
-print(f"T4 ok — reproduced a stranger's eval to the cm: {measured_height:.3f} m")
+print(f"T4a ok — a stranger's number reproduced to the cm: {measured_height:.3f} m")
+
+# %%
+# TODO (b) + (c): for all seven, print name / survived-5 s / eval["sim_proxy"]
+survived = ...  # set of manifest names that never fell
+
+# %%
+assert survived == {"rough-walk-e", "rough-walk-g", "flamingo-cycle", "happy-hop"}
+print("T4 ok — 4 of 7 transferred. Now explain the split using sim_proxy.")
+
+# %% [markdown]
+# *Your answer:* ...
 
 # %% [markdown]
 # ## T5 — Ship it 🏆

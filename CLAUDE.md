@@ -198,7 +198,10 @@ Apache-2.0); GPU track = upstream microduck_rl on Colab T4. Plan file above.
   `assets/community/` (rough-walk-e/-g, flamingo-cycle, happy-hop) — walk-scene
   dropdown = 9 policies; `eval.sim_proxy` found to predict sim2sim transfer (4/4
   CPU-MuJoCo-evaluated transfer, 0/3 mjlab-Warp-only)
-- [ ] Fold the sim_proxy finding into Lab 8 T4 (run all 7, let students find the split)
+- [x] Lab 8 T4 rebuilt around it: reproduce flamingo's 0.09 m, then run all 7
+  (4 vendored + 3 downloaded) and read the split off `eval.sim_proxy`; lecture
+  carries the table. Gotcha: survival must be checked **every tick** — `upright`
+  is instantaneous and `microduck-running` tumbles back upright by t=5 s
 - Not ported to the browser on purpose: Lab 3/4 Python loops, pushes, eval protocols
   (Python = measurement instrument, browser = experience instrument)
 
