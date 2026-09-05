@@ -194,6 +194,11 @@ Apache-2.0); GPU track = upstream microduck_rl on Colab T4. Plan file above.
   three-way scorecard table; Lab 8 deployment = PR; `stage2/colab_gpu_track.ipynb`
   (real clone URL, Drive via `colab.persist`), `stage2/gpu_notes.md` (measurement table)
 - [x] Tests: `test_web`, `test_export`, `test_community` (fast suite); CI `playground.yml`
+- [x] **Community gallery (2026-09-05)**: 4 Apache-2.0 Hub policies vendored into
+  `assets/community/` (rough-walk-e/-g, flamingo-cycle, happy-hop) — walk-scene
+  dropdown = 9 policies; `eval.sim_proxy` found to predict sim2sim transfer (4/4
+  CPU-MuJoCo-evaluated transfer, 0/3 mjlab-Warp-only)
+- [ ] Fold the sim_proxy finding into Lab 8 T4 (run all 7, let students find the split)
 - Not ported to the browser on purpose: Lab 3/4 Python loops, pushes, eval protocols
   (Python = measurement instrument, browser = experience instrument)
 
