@@ -234,9 +234,25 @@ Apache-2.0); GPU track = upstream microduck_rl on Colab T4. Plan file above.
   Also: the rough-walk siblings have **no command deadband** (0.071/0.073 m/s at
   vx=0.2 where shipped `alpha_walking` gives 0.001) — a control group for Lab 7's
   deadband lesson; flamingo lifted foot re-measured 0.093 m vs manifest 0.09;
-  happy-hop is the partial-transfer case (upright, but a 7 mm hop). Lab 8 now has
-  strangers' policies on disk. **Next:** fold the sim_proxy finding into Lab 8's
-  notebooks; Colab-iframe + notebook-budget check (S6); S5 GPU track.
+  happy-hop is the partial-transfer case (upright, but a 7 mm hop).
+  **Lab 8 T4 rebuilt around it**: reproduce flamingo's 0.09 m from the vendored
+  copy, then run all 7 (4 local + 3 downloaded) and read the split off
+  `eval.sim_proxy`; lecture carries the table + "the contract is a wire format,
+  not a promise about physics". Measurement gotcha found while validating and
+  kept as a teaching point: **survival must be checked every tick** — `upright`
+  is instantaneous, and `microduck-running` face-plants at 0.54 s then tumbles
+  back upright by t=5 s, scoring a false pass. Lab 8 lecture+solution execute
+  headless.
+  **Deploy verified end-to-end**: push → `playground.yml` → live site carried the
+  9-policy walk scene **180 s later**. That closes the loop Lab 8 promises
+  students (merge → rebuild → your duck in everyone's browser).
+  **Housekeeping**: at the instructor's request all `Co-Authored-By: Claude`
+  trailers were stripped from the 15 commits that carried them
+  (`git filter-branch --msg-filter`, force-push `ce63655`→`1ed669b`; no
+  forks/tags/PRs, file trees verified identical). They put Claude in GitHub's
+  Contributors list. **Do not add that trailer to future commits.**
+  **Next:** Colab-iframe + notebook-budget check (S6); S5 GPU track;
+  `stage2/gpu_notes.md` table.
 - **2026-09-04 (M6 kickoff)** — Platform decision with the instructor: **Colab-first,
   laptop optional**; interactive 3D via **mjswan** (browser MuJoCo-WASM + ONNX; its
   `mjswan_playground` already wired all 9 Microduck policies); GPU track = upstream
